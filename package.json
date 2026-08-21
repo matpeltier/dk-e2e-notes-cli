@@ -1,0 +1,11 @@
+{
+  "name": "dk-e2e-notes-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Tiny notes CLI (Dark Kitchen E2E test project)",
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "license": "MIT"
+}
