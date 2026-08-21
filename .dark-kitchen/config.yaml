@@ -1,0 +1,41 @@
+version: 1
+trackers:
+  - id: gh-issues
+    kind: github-issues
+    owner: matpeltier
+    repo: dk-e2e-notes-cli
+    tokenEnv: GITHUB_TOKEN
+repositories:
+  - id: main-repo
+    kind: github
+    owner: matpeltier
+    repo: dk-e2e-notes-cli
+    defaultBranch: main
+    tokenEnv: GITHUB_TOKEN
+harnessProfiles:
+  - managed: true
+    id: opencode
+    kind: opencode
+roles:
+  - id: implementer
+    harnessProfileId: opencode
+  - id: reviewer
+    harnessProfileId: opencode
+  - id: fixer
+    harnessProfileId: opencode
+  - id: repository-tester
+    harnessProfileId: opencode
+workflows:
+  - id: default
+    builtin: default
+    roles:
+      - implementer
+      - reviewer
+      - fixer
+      - repository-tester
+mergePolicy:
+  strategy: squash
+  requiredChecks:
+    - test
+  requireApproval: false
+  deleteHeadBranchAfterMerge: true
