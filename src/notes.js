@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const NOTES_FILE = join(process.cwd(), 'notes.json');
@@ -14,17 +14,46 @@ function loadNotes() {
   }
 }
 
+function saveNotes(notes) {
+  writeFileSync(NOTES_FILE, JSON.stringify(notes, null, 2) + '\n');
+}
+
+function fail(message) {
+  console.error(`Error: ${message}`);
+  process.exit(1);
+}
+
 function listNotes() {
   for (const note of loadNotes()) {
     console.log(`${note.id}: ${note.text}`);
   }
 }
 
-const command = process.argv[2];
+function removeNote(idArg) {
+  if (idArg === undefined) {
+    fail('usage: node src/notes.js remove <id> (id required)');
+  }
+  const id = Number(idArg);
+  if (!Number.isInteger(id)) {
+    fail(`invalid note id: ${idArg}`);
+  }
+  const notes = loadNotes();
+  if (!notes.some((n) => n.id === id)) {
+    fail(`note with id ${id} not found`);
+  }
+  saveNotes(notes.filter((n) => n.id !== id));
+  console.log(`Removed note ${id}`);
+}
 
-if (command === 'list') {
-  listNotes();
-} else {
-  console.error(`Unknown command: ${command ?? '(none)'}`);
-  process.exit(1);
+const [command, ...args] = process.argv.slice(2);
+
+switch (command) {
+  case 'list':
+    listNotes();
+    break;
+  case 'remove':
+    removeNote(args[0]);
+    break;
+  default:
+    fail(`Unknown command: ${command ?? '(none)'}`);
 }
