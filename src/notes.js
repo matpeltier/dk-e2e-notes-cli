@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, } from 'node:path';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const NOTES_FILE = join(process.cwd(), 'notes.json');
@@ -74,7 +74,7 @@ export function main(argv = process.argv.slice(2)) {
   const [command, ...args] = argv;
 
   switch (command) {
-    case 'add':
+    case 'add': {
       try {
         const note = addNote(args.join(' '));
         console.log(note.id);
@@ -83,6 +83,7 @@ export function main(argv = process.argv.slice(2)) {
         console.error(`Error: ${error.message}`);
         return 1;
       }
+    }
     case 'list':
       listNotes();
       return 0;
