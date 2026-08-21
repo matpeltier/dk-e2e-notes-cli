@@ -1,26 +1,47 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const NOTES_FILE = join(process.cwd(), 'notes.json');
 
-function loadNotes() {
+export function loadNotes(file = NOTES_FILE) {
+  if (!existsSync(file)) {
+    return [];
+  }
   try {
-    return JSON.parse(readFileSync(NOTES_FILE, 'utf8'));
+    const parsed = JSON.parse(readFileSync(file, 'utf8'));
+    return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     if (err.code === 'ENOENT') return [];
     throw err;
   }
 }
 
-function saveNotes(notes) {
-  writeFileSync(NOTES_FILE, JSON.stringify(notes, null, 2) + '\n');
+function saveNotes(notes, file = NOTES_FILE) {
+  writeFileSync(file, `${JSON.stringify(notes, null, 2)}\n`);
 }
 
 function fail(message) {
   console.error(`Error: ${message}`);
   process.exit(1);
+}
+
+export function addNote(text, file = NOTES_FILE) {
+  const trimmed = typeof text === 'string' ? text.trim() : '';
+  if (!trimmed) {
+    throw new Error('note text must not be empty');
+  }
+
+  const notes = loadNotes(file);
+  const nextId = notes.reduce((max, note) => Math.max(max, Number(note.id) || 0), 0) + 1;
+  const note = { id: nextId, text: trimmed };
+
+  notes.push(note);
+  saveNotes(notes, file);
+
+  return note;
 }
 
 function listNotes() {
@@ -45,15 +66,39 @@ function removeNote(idArg) {
   console.log(`Removed note ${id}`);
 }
 
-const [command, ...args] = process.argv.slice(2);
+function printUsage() {
+  console.error('Usage: node src/notes.js <add|list|remove> [args]');
+}
 
-switch (command) {
-  case 'list':
-    listNotes();
-    break;
-  case 'remove':
-    removeNote(args[0]);
-    break;
-  default:
-    fail(`Unknown command: ${command ?? '(none)'}`);
+export function main(argv = process.argv.slice(2)) {
+  const [command, ...args] = argv;
+
+  switch (command) {
+    case 'add': {
+      try {
+        const note = addNote(args.join(' '));
+        console.log(note.id);
+        return 0;
+      } catch (error) {
+        console.error(`Error: ${error.message}`);
+        return 1;
+      }
+    }
+    case 'list':
+      listNotes();
+      return 0;
+    case 'remove':
+      removeNote(args[0]);
+      return 0;
+    default:
+      printUsage();
+      return 1;
+  }
+}
+
+const isMain =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isMain) {
+  process.exit(main());
 }
