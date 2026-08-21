@@ -62,6 +62,17 @@ test('remove with unknown id exits non-zero with a clear error', () => {
   assert.equal(readFileSync(join(dir, 'notes.json'), 'utf8'), before);
 });
 
+test('remove with a non-numeric id exits non-zero with a clear error', () => {
+  const dir = setupNotesDir([{ id: 1, text: 'buy milk' }]);
+  const before = readFileSync(join(dir, 'notes.json'), 'utf8');
+
+  const result = runRemove(dir, 'abc');
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /invalid/i);
+  assert.equal(readFileSync(join(dir, 'notes.json'), 'utf8'), before);
+});
+
 test('remove with missing id argument exits non-zero with a clear error', () => {
   const dir = setupNotesDir([{ id: 1, text: 'buy milk' }]);
 
